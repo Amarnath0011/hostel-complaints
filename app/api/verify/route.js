@@ -4,8 +4,8 @@ import { prisma } from "@/lib/prisma";
 export async function POST(req) {
     try{
         const body = await req.json();
-        const {enteredOTP, userId} = body;
-        const savedOTPRecord = await prisma.oTP.findFirst({where: {userId: userId, type: "SIGNUP" }, orderBy: { createdAt: 'desc' }});
+        const {enteredOTP, userId, type} = body;
+        const savedOTPRecord = await prisma.oTP.findFirst({where: {userId: userId, type: type }, orderBy: { createdAt: 'desc' }});
         if(!savedOTPRecord) {
             return Response.json({ error: "No OTP found. Please resend." }, { status: 404 });
         }
@@ -15,11 +15,13 @@ export async function POST(req) {
         if(savedOTPRecord.code !== enteredOTP) {
             return Response.json({error:"invalid otp, re-enter"}, {status:400});
         }
-        await prisma.$transaction([
-            prisma.user.update({where:{id:userId,}, data: {isVerified:true}}),
-            prisma.oTP.deleteMany({where:{userId, type:"SIGNUP"}})
-        ])
-        return Response.json({message:"Email verified successfully"}, {status:200});
+        if(type === "SIGNUP") {
+            await prisma.$transaction([
+                prisma.user.update({where:{id:userId,}, data: {isVerified:true}}),
+                prisma.oTP.deleteMany({where:{userId, type}})
+            ])
+            return Response.json({message:"Email verified successfully"}, {status:200});
+        }
     } catch(error) {
         console.error("Verification Error:", error);
         return Response.json({error:"Internal server error"}, {status:500});

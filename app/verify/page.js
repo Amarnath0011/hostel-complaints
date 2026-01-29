@@ -7,6 +7,7 @@ const Verify = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const userId = searchParams.get("id");
+  const type = searchParams.get("type");
 
   const [otp, setOtp] = useState("");
   const [timer, setTimer] = useState(60);
@@ -26,12 +27,14 @@ const Verify = () => {
       const res = await fetch("/api/verify", {
         method: "POST",
         headers:{},
-        body: JSON.stringify({enteredOTP: otp, userId})
+        body: JSON.stringify({enteredOTP: otp, userId, type:type})
       })
       const data = await res.json();
       if(res.ok) {
-        toast.success("Account verified! You can now login");
-        router.push('/login')
+        if(type === "SIGNUP") {
+          toast.success("Account verified! You can now login");
+          router.push('/login')
+        }
       } else {
         toast.error(data.error || "Verification failed");
       }
@@ -44,15 +47,25 @@ const Verify = () => {
 
   const handleResend = async () => {
     setTimer(60);
-    toast.promise(
-      fetch("/api/signup", { /* logic to resend just OTP */ }),
-      {
+    
+    try {
+      const res = await fetch("/api/resend-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, type })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data.error || "Failed to resend");
+      } 
+      toast.promise({
         loading: 'Sending new OTP...',
         success: 'New OTP sent to your mail!',
-        error: 'Could not resend OTP',
-      }
-    );
-  };
+        error: (err) => err.message,
+      });
+    } catch (error) {
+      toast.error("Something went wrong");
+    }};
 
   
   return (

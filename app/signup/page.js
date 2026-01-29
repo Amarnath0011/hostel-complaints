@@ -62,7 +62,7 @@ const Signup = () => {
             setEmail("");
             setPassword("");
             setConfirmPassword("");
-            router.push(`/verify?id=${data.id}`);
+            router.push(`/verify?id=${data.id}&type=SIGNUP`);
           } else {
             toast.error(data.error || "Signup failed");
           }

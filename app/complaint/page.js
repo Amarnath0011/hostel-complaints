@@ -2,6 +2,8 @@
 import { getStoredUser } from '@/lib/auth';
 import React, { useState } from 'react'
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
+import Navbar from '../components/Navbar';
 
 function NewComplaint() {
     const [formData, setFormData] = useState({title:'', description:'', category:'ELECTRICAL', hostel:'', roomNo:''});
@@ -26,16 +28,18 @@ function NewComplaint() {
                 body: JSON.stringify(formData),
             })
             if(res.ok) {
-                alert('complaint submitted');
+                toast.success("complaint submitted successfully");
                 router.push('/')
             }
         } catch (error) {
-            alert("complaint not submitted");
+            toast.error(error);
         } finally {
             setLoading(false);
         }
     }
   return (
+    <>
+    <Navbar />
     <div className="min-h-screen bg-gray-50 py-12 px-4">
       <div className="max-w-2xl mx-auto bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
         <h1 className="text-2xl font-bold text-gray-800 mb-6">Report an Issue</h1>
@@ -149,6 +153,7 @@ function NewComplaint() {
         </form>
       </div>
     </div>
+    </>
   )
 }
 

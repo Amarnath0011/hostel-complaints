@@ -29,8 +29,8 @@ function ComplaintFeed({initialComplaints}) {
       <>
         <FilterBar filters={filters} setFilters={setFilters} />
     
-        <div className="flex flex-col gap-4 mt-6 m-10">
-        {/* <div className= " grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 m-10"> */}
+        {/* <div className="flex flex-col gap-4 mt-6 m-10"> */}
+        <div className= " grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 m-10">
           {filtered.map((complaint) => (
             <ComplaintCard 
               key={complaint.id} 

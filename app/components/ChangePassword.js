@@ -1,3 +1,4 @@
+import { getStoredUser } from '@/lib/auth';
 import React, { useState } from 'react'
 
 
@@ -8,10 +9,12 @@ const ChangePassword = () => {
     const [errors, setErrors] = useState({});
     
 
-    function handleSubmit (e) {
+    async function handleSubmit (e) {
         e.preventDefault();
         setLoading(true);
         let newErrors = {};
+        const user = getStoredUser();
+        if (!user) return;
 
         const passwordRegex = /^(?=.*[!@#$%^&*])(?=.{8,})/;
         if (!passwordRegex.test(password)) {
@@ -27,9 +30,23 @@ const ChangePassword = () => {
           return;
         }
         try {
-            
+            const res = await fetch('/api/reset-password', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ id:user.id , password }),
+              });
+
+            if(res.ok) {
+                toast.success("Password updated!");
+                setPassword("");
+                setConfirmPassword("");
+            } else {
+                toast.error(data.error || "Failed to update password");
+            }
         } catch (error) {
-            
+            toast.error("Network error");
         } finally {
             setLoading(false);
         }
@@ -39,7 +56,6 @@ const ChangePassword = () => {
     <div className='flex'>
         <form onSubmit={handleSubmit}>
             <div>
-                {/* <label>New Password</label> */}
                 <input type="password" required 
                     value={password}
                     onChange={(e) => {
@@ -58,7 +74,6 @@ const ChangePassword = () => {
             </div>
 
             <div>
-                {/* <label>Confirm Password</label>  */}
                 <input type="password" required
                     value={confirmPassword}
                     onChange={(e) => {setConfirmPassword(e.target.value.replace(/\s/g, ""));

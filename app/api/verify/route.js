@@ -22,6 +22,10 @@ export async function POST(req) {
             ])
             return Response.json({message:"Email verified successfully"}, {status:200});
         }
+        if(type === "PASSWORD_RESET") {
+            await prisma.oTP.deleteMany({ where: { userId, type } });
+            return Response.json({message:"Email verified successfully"}, {status:200});
+        }
     } catch(error) {
         console.error("Verification Error:", error);
         return Response.json({error:"Internal server error"}, {status:500});

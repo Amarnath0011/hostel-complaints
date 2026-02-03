@@ -83,6 +83,12 @@ function LoginPage() {
           {loading ? "Logging in..." : "Login"}
         </button>
 
+        <p className='mt-3 hover:underline'>
+          <Link href="/forgot-password">
+            Forgot Password?
+          </Link>
+        </p>
+
         <p className="mt-4 text-center text-sm text-gray-600"> Dont have an account?{' '}
           <Link href="/signup" className="text-blue-600 hover:underline font-medium">
             Sign up

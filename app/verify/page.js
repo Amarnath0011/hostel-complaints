@@ -35,6 +35,10 @@ const Verify = () => {
           toast.success("Account verified! You can now login");
           router.push('/login')
         }
+        if(type === "PASSWORD_RESET") {
+          toast.success("Email verified!");
+          router.push(`/reset-password?id=${userId}`);
+        }
       } else {
         toast.error(data.error || "Verification failed");
       }

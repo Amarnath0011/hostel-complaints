@@ -1,6 +1,6 @@
 // const { PrismaClient } = require("@prisma/client");
 // const prisma = new PrismaClient();
-const { prisma } = require("@/lib/prisma");
+import { prisma } from "@/lib/prisma";
 import bcrypt from "bcrypt";
 
 export async function POST (req){
@@ -18,8 +18,8 @@ export async function POST (req){
         if (!passwordRegex.test(password)) {
             return Response.json({ error: "Password too weak" }, { status: 400 });
         }
-        const hashedPassword = bcrypt.hash(password, 10);
-        await prisma.user.update({where:{id}, data:{hashedPassword}});
+        const hashedPassword = await bcrypt.hash(password, 10);
+        await prisma.user.update({where:{id}, data:{password:hashedPassword}});
         return Response.json({message:"Password changed"}, {status:200});
     } catch (error) {
         return Response.json({ error: "Internal Server Error" }, { status: 500 });

@@ -1,8 +1,8 @@
 import { getStoredUser } from '@/lib/auth';
 import React, { useState } from 'react'
+import { toast } from 'sonner';
 
-
-const ChangePassword = () => {
+const ChangePassword = ({ userId: propUserId, isResetFlow = false }) => {
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
     const [loading, setLoading] = useState(false);
@@ -14,7 +14,12 @@ const ChangePassword = () => {
         setLoading(true);
         let newErrors = {};
         const user = getStoredUser();
-        if (!user) return;
+        const finalUserId = propUserId || user?.id;
+        if (!finalUserId) {
+            toast.error("User session not found. Please try again.");
+            setLoading(false);
+            return;
+        }
 
         const passwordRegex = /^(?=.*[!@#$%^&*])(?=.{8,})/;
         if (!passwordRegex.test(password)) {
@@ -35,17 +40,19 @@ const ChangePassword = () => {
                 headers: {
                   'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ id:user.id , password }),
+                body: JSON.stringify({ id:finalUserId , password }),
               });
-
+              const data = await res.json();
             if(res.ok) {
-                toast.success("Password updated!");
+                toast.success(isResetFlow ? "Password reset successful!" : "Password updated!");
                 setPassword("");
                 setConfirmPassword("");
+                if(isResetFlow) window.location.href = '/login';
             } else {
                 toast.error(data.error || "Failed to update password");
             }
         } catch (error) {
+            console.log(error);
             toast.error("Network error");
         } finally {
             setLoading(false);
@@ -93,7 +100,7 @@ const ChangePassword = () => {
                 disabled={loading}
                 className="w-full bg-blue-600 text-white font-semibold py-3 rounded-lg hover:bg-blue-700 active:bg-blue-800 transition-colors disabled:bg-gray-400 mt-2"
             >
-                {loading?"Please Wait":"Confirm Reset"}
+                {loading ? "Updating..." : (isResetFlow ? "Set New Password" : "Change Password")}
             </button>
         </form>
     </div>

@@ -6,7 +6,7 @@ export async function POST(req) {
         //todo implement jwt
         const userId = req.headers.get("userId");
         //todo add image also
-        const {title, description, category} = body;
+        const {title, description, category, imageUrl, hostel, roomNo} = body;
         //todo add room no hostel too here and in schema too
         if(!userId) {
             return Response.json({error: "unauthorized"}, {status:401})
@@ -16,7 +16,7 @@ export async function POST(req) {
         }
         const complaint = await prisma.complaint.create({
             data: {
-                title, description, category, status: "PENDING", userId: userId
+                title, description, category, status: "PENDING", userId: userId, imageUrl
             }
         })
         return Response.json(complaint, { status: 201 });

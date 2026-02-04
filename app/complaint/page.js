@@ -4,6 +4,7 @@ import React, { useState } from 'react'
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import Navbar from '../components/Navbar';
+import Image from 'next/image';
 
 function NewComplaint() {
     const [formData, setFormData] = useState({title:'', description:'', category:'ELECTRICAL', hostel:'', roomNo:''});
@@ -16,25 +17,45 @@ function NewComplaint() {
         e.preventDefault();
         const user = getStoredUser();
         if(!user) {
-            alert("please login first");
+            toast.alert("please login first");
             return;
         }
         const userId = user.id;
         setLoading(true);
         try {
-            const res = await fetch('/api/complaints', {
-                method: 'POST',
-                headers: { "userId": userId, 'Content-Type': 'application/json' },
-                body: JSON.stringify(formData),
-            })
-            if(res.ok) {
-                toast.success("complaint submitted successfully");
-                router.push('/')
-            }
+          let imageUrl = null;
+
+          if (file) {
+            const imageFormData = new FormData();
+            imageFormData.append("file", file);
+
+            const uploadRes = await fetch("/api/image-upload", {
+              method: "POST",
+              body: imageFormData,
+            });
+            if (!uploadRes.ok) throw new Error("Image upload failed");
+            
+            const uploadData = await uploadRes.json();
+            // console.log(uploadData.url);
+            imageUrl = uploadData.url;
+          }
+
+          const res = await fetch('/api/complaints', {
+              method: 'POST',
+              headers: { "userId": userId, 'Content-Type': 'application/json' },
+              body: JSON.stringify({...formData, imageUrl:imageUrl}),
+          })
+          if(res.ok) {
+              toast.success("complaint submitted successfully");
+              router.push('/')
+          } else {
+            const errorData = await res.json();
+            throw new Error(errorData.error || "Submission failed");
+          }
         } catch (error) {
-            toast.error(error);
+          toast.error(error);
         } finally {
-            setLoading(false);
+          setLoading(false);
         }
     }
   return (
@@ -139,10 +160,27 @@ function NewComplaint() {
               <p className="text-sm text-gray-600">
                 {file ? <strong>Selected: {file.name}</strong> : "Click to browse or drag and drop"}
               </p>
-              <p className="text-xs text-gray-400 mt-1">PNG, JPG up to 5MB</p>
+              <p className="text-xs text-gray-400 mt-1">PNG, JPG</p>
             </div>
           </div>
-
+          {file && (
+            <div className="mt-4 relative w-full h-48 rounded-lg overflow-hidden ">
+              <Image 
+                src={URL.createObjectURL(file)} 
+                alt="Preview" 
+                className="w-full h-full object-cover rounded-lg border"
+                fill
+                onLoad={() => URL.revokeObjectURL(file)}
+              />
+              <button 
+                type='button'
+                onClick={() => setFile(null)}
+                className="absolute top-2 right-2 bg-red-500 text-white rounded-full px-2 shadow-lg"
+              >
+                ✕
+              </button>
+            </div>
+          )}
           <button 
             type="submit"
             disabled={loading}

@@ -37,13 +37,38 @@ const ForgotPassword = () => {
         }
     }
     return (
-        <div>
-            <form onSubmit={handleSubmit}>
-                <div>
-                    <label>Email</label>
-                    <input type="email" placeholder="Enter your registered email id" value={email} required onChange={(e) => setEmail(e.target.value.replace(/\s/g, ""))}/>
+        <div className="flex justify-center items-center p-4">
+            <form 
+                onSubmit={handleSubmit} 
+                className="w-full max-w-md bg-white p-8 rounded-2xl shadow-sm border border-gray-100 space-y-6"
+            >
+                <div className="space-y-2">
+                <label className="text-sm font-semibold text-gray-700 ml-1">
+                    Email Address
+                </label>
+                <input 
+                    type="email" 
+                    placeholder="Enter your registered email id" 
+                    value={email} 
+                    required 
+                    onChange={(e) => setEmail(e.target.value.replace(/\s/g, ""))}
+                    className="w-full p-3 bg-gray-50 border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                />
                 </div>
-                <button type="submit">{loading?"Please Wait":"Submit"}</button>
+
+                <button 
+                type="submit" 
+                disabled={loading}
+                className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg shadow-blue-200 active:scale-[0.98] transition-all disabled:bg-gray-400 disabled:shadow-none"
+                >
+                {loading ? (
+                    <span className="flex items-center justify-center gap-2">
+                    Please Wait...
+                    </span>
+                ) : (
+                    "Submit"
+                )}
+                </button>
             </form>
         </div>
     )

@@ -4,7 +4,7 @@ import ComplaintCard from './ComplaintCard'
 import FilterBar from './FilterBar'
 import ComplaintPopUp from './ComplaintPopUp'
 
-function ComplaintFeed({initialComplaints}) {
+function ComplaintFeed({initialComplaints = []}) {
     const [filters, setFilters] = useState({
         status: "ALL",
         category: "ALL",
@@ -17,7 +17,7 @@ function ComplaintFeed({initialComplaints}) {
     const filtered = initialComplaints.filter((c) => {
       const matchStatus = filters.status === "ALL" || c.status === filters.status;
       const matchCategory = filters.category === "ALL" || c.category === filters.category;
-      const matchHostel = filters.hostel === "ALL" || c.hostel === filters.hostel; 
+      const matchHostel = filters.hostel === "ALL" || (c.hostel && c.hostel === filters.hostel); 
       return matchStatus && matchCategory && matchHostel;
     }).sort((a, b) => {
       return filters.sort === "Newest" 

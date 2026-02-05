@@ -5,9 +5,10 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import Navbar from '../components/Navbar';
 import Image from 'next/image';
+import imageCompression from 'browser-image-compression';
 
 function NewComplaint() {
-    const [formData, setFormData] = useState({title:'', description:'', category:'ELECTRICAL', hostel:'', roomNo:''});
+    const [formData, setFormData] = useState({title:'', description:'', category:'ELECTRICAL', hostel:'', room:''});
     const [file, setFile] = useState(null);
     const [loading, setLoading] = useState(false);
 
@@ -26,8 +27,16 @@ function NewComplaint() {
           let imageUrl = null;
 
           if (file) {
+            const options = {
+              maxSizeMB: 0.5,
+              maxWidthOrHeight: 1280,
+              useWebWorker: true,
+            };
+      
+            toast.loading("Compressing image...");
+            const compressedFile = await imageCompression(file, options);
             const imageFormData = new FormData();
-            imageFormData.append("file", file);
+            imageFormData.append("file", compressedFile);
 
             const uploadRes = await fetch("/api/image-upload", {
               method: "POST",
@@ -137,7 +146,7 @@ function NewComplaint() {
             type="text"
             placeholder="e.g. E-511"
             className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-black"
-            onChange={(e) => setFormData({...formData, roomNo: e.target.value})}
+            onChange={(e) => setFormData({...formData, room: e.target.value})}
             required
             />
         </div>

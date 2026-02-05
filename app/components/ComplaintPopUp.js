@@ -1,4 +1,5 @@
 'use client'
+import Image from 'next/image';
 import React from 'react'
 
 function ComplaintPopUp({complaint, onClose}) {
@@ -36,9 +37,16 @@ function ComplaintPopUp({complaint, onClose}) {
           </div>
 
           {/* images */}
-          <div className="w-full h-64 bg-gray-100 rounded-xl flex items-center justify-center border-2 border-dashed border-gray-200 mb-4 text-gray-400">
-             Image Section (Coming Soon)
-          </div>
+          {complaint.imageUrl && (
+            <div className="relative w-full md:w-64 h-64 bg-gray-50 rounded-xl overflow-hidden border border-gray-200 mb-4">
+              <Image 
+                src={complaint.imageUrl} 
+                alt={complaint.title}
+                fill
+                className="object-contain"
+              />
+            </div>
+          )}
 
           <hr className="border-gray-100 mb-4" />
 

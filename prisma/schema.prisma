@@ -21,6 +21,7 @@ enum Status {
   PENDING
   IN_PROGRESS
   RESOLVED
+  REJECTED
 }
 
 enum Category {
@@ -47,6 +48,8 @@ model Complaint {
   id          String   @id @default(uuid())
   title       String
   description String
+  hostel      String?
+  room        String?
   category    Category
   imageUrl    String?  
   status      Status   @default(PENDING)

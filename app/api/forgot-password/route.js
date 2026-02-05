@@ -9,7 +9,7 @@ export async function POST(req) {
 
     const user = await prisma.user.findUnique({ where: { email } });
 
-    if (!user) {
+    if (!user || user.isVerified === false) {
       // change this to just otp sent to your email
       return Response.json({ error: "No account found with this email" }, { status: 404 });
     }

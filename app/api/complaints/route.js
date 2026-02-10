@@ -11,7 +11,7 @@ export async function POST(req) {
         if(!userId) {
             return Response.json({error: "unauthorized"}, {status:401})
         }
-        if(!title || !description || !category) {
+        if(!title || !description || !category || !hostel || !room) {
             return Response.json({error:"Missing required fields"}, {status:400})
         }
         const complaint = await prisma.complaint.create({

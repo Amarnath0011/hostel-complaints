@@ -1,18 +1,45 @@
 'use client'
 import { getStoredUser } from '@/lib/auth';
-import React, { useState } from 'react'
-import { useRouter } from 'next/navigation';
+import React, { useEffect, useState } from 'react'
+import { useParams, useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import Navbar from '../components/Navbar';
+import Navbar from '../../components/Navbar';
 import Image from 'next/image';
 import imageCompression from 'browser-image-compression';
 
-function NewComplaint() {
-    const [formData, setFormData] = useState({title:'', description:'', category:'ELECTRICAL', hostel:'', room:''});
+function ComplaintForm() {
+    const [formData, setFormData] = useState({title:'', description:'', category:'ELECTRICAL', hostel:'Girls Hostel A', room:''});
     const [file, setFile] = useState(null);
-    const [loading, setLoading] = useState(false);
+    const params = useParams();
+    const isEditMode = !!params.id;
+    const [loading, setLoading] = useState(isEditMode);
+
+    const [existingImageUrl, setExistingImageUrl] = useState(null);
 
     const router = useRouter();
+    // console.log(isEditMode)
+    useEffect(() => {
+      if(isEditMode) {
+        const fetchExistingData = async() => {
+          try {
+            const res = await fetch(`/api/complaints/${params.id}`);
+            const data = await res.json();
+            if(res.ok) {
+              setFormData({title:data.title, description:data.description, category:data.category, hostel:data.hostel, room:data.room});
+              setExistingImageUrl(data.imageUrl);
+            }
+          } catch (error) {
+            toast.error("Failed to restore complaint data");
+          } finally {
+            setLoading(false);
+          }
+        } 
+        fetchExistingData();
+      }
+    
+      
+    }, [isEditMode, params.id])
+    
 
     async function handleSubmit(e) {
         e.preventDefault();
@@ -24,7 +51,7 @@ function NewComplaint() {
         const userId = user.id;
         setLoading(true);
         try {
-          let imageUrl = null;
+          let imageUrl = existingImageUrl;
 
           if (file) {
             const options = {
@@ -33,7 +60,6 @@ function NewComplaint() {
               useWebWorker: true,
             };
       
-            toast.loading("Compressing image...");
             const compressedFile = await imageCompression(file, options);
             const imageFormData = new FormData();
             imageFormData.append("file", compressedFile);
@@ -48,15 +74,19 @@ function NewComplaint() {
             // console.log(uploadData.url);
             imageUrl = uploadData.url;
           }
+          //agar edit kr rhe to patch otherwise post
 
-          const res = await fetch('/api/complaints', {
-              method: 'POST',
+          const url = isEditMode ? `/api/complaints/${params.id}`: '/api/complaints';
+          const method = isEditMode ? 'PATCH' : 'POST'
+
+          const res = await fetch(url, {
+              method: method,
               headers: { "userId": userId, 'Content-Type': 'application/json' },
               body: JSON.stringify({...formData, imageUrl:imageUrl}),
           })
           if(res.ok) {
-              toast.success("complaint submitted successfully");
-              router.push('/')
+              toast.success(isEditMode?"complaint edited successfully": "complaint submitted successfully");
+              router.push('/my-complaints')
           } else {
             const errorData = await res.json();
             throw new Error(errorData.error || "Submission failed");
@@ -82,6 +112,7 @@ function NewComplaint() {
               type="text"
               maxLength={75}
               placeholder="e.g. Water leakage in Room 302"
+              value={formData.title}
               className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-black"
               onChange={(e) => setFormData({...formData, title: e.target.value})}
               required
@@ -109,6 +140,7 @@ function NewComplaint() {
             <textarea 
                 maxLength={500}
               placeholder="Provide more details about the problem..."
+              value={formData.description}
               className="w-full p-3 border border-gray-300 rounded-lg h-32 outline-none focus:ring-2 focus:ring-blue-500 text-black resize-none"
               onChange={(e) => setFormData({...formData, description: e.target.value})}
               required
@@ -123,6 +155,7 @@ function NewComplaint() {
             <select 
             className="w-full p-3 border border-gray-300 rounded-lg bg-white outline-none focus:ring-2 focus:ring-blue-500 text-black"
             onChange={(e) => setFormData({...formData, hostel: e.target.value})}
+            value={formData.hostel}
             >
             <option>Girls Hostel A</option>
             <option>Girls Hostel B</option>
@@ -145,6 +178,7 @@ function NewComplaint() {
             <input 
             type="text"
             placeholder="e.g. E-511"
+            value={formData.room}
             className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-black"
             onChange={(e) => setFormData({...formData, room: e.target.value})}
             required
@@ -172,22 +206,35 @@ function NewComplaint() {
               <p className="text-xs text-gray-400 mt-1">PNG, JPG</p>
             </div>
           </div>
-          {file && (
-            <div className="mt-4 relative w-full h-48 rounded-lg overflow-hidden ">
+          {/* Image Preview Section */}
+          {(file || existingImageUrl) && (
+            <div className="mt-4 relative w-full md:w-64 h-64 bg-gray-50 rounded-xl overflow-hidden border border-gray-200 group">
               <Image 
-                src={URL.createObjectURL(file)} 
-                alt="Preview" 
-                className="w-full h-full object-cover rounded-lg border"
-                fill
-                onLoad={() => URL.revokeObjectURL(file)}
+                src={file ? URL.createObjectURL(file) : existingImageUrl} 
+                alt="Complaint Preview" 
+                fill 
+                className="object-contain"
+                onLoadingComplete={() => { if(file) URL.revokeObjectURL(file) }}
               />
+              
+              {/* Remove/Undo Button */}
               <button 
-                type='button'
-                onClick={() => setFile(null)}
-                className="absolute top-2 right-2 bg-red-500 text-white rounded-full px-2 shadow-lg"
+                type="button"
+                onClick={() => {
+                  if (file) {
+                    setFile(null);
+                  } else {
+                    setExistingImageUrl(null);
+                  }
+                }}
+                className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center shadow-lg hover:bg-red-600 transition-colors z-10"
               >
                 ✕
               </button>
+              
+              <div className="absolute bottom-2 left-2 bg-black/50 text-white text-[10px] px-2 py-1 rounded backdrop-blur-sm">
+                {file ? "NEW IMAGE SELECTED" : "CURRENT IMAGE"}
+              </div>
             </div>
           )}
           <button 
@@ -204,4 +251,4 @@ function NewComplaint() {
   )
 }
 
-export default NewComplaint
+export default ComplaintForm

@@ -4,6 +4,7 @@ import { getStoredUser, clearUser } from "@/lib/auth";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import ChangePassword from "../components/ChangePassword";
+import Navbar from "../components/Navbar";
 
 export default function Account() {
   const [user, setUser] = useState(null);
@@ -36,10 +37,11 @@ export default function Account() {
   if (!user) return null;
 
   return (
+    <>
+    <Navbar />
     <div className="max-w-3xl mx-auto p-6 space-y-8">
       <h1 className="text-3xl font-bold text-gray-800">Account Settings</h1>
 
-      {/* 1. Profile Info Card */}
       <div className="bg-white border rounded-xl p-6 shadow-sm">
         <h2 className="text-xl font-semibold mb-4 border-b pb-2">Profile Information</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -56,7 +58,6 @@ export default function Account() {
 
       <ChangePassword />
 
-      {/* 3. Danger Zone Card */}
       <div className="bg-red-50 border border-red-100 rounded-xl p-6 shadow-sm">
         <p className="text-sm text-red-600 mb-4">
           Once you delete your account, there is no going back. All your complaint history will be wiped.
@@ -69,5 +70,6 @@ export default function Account() {
         </button>
       </div>
     </div>
+    </>
   );
 }

@@ -16,7 +16,7 @@ export async function POST(req) {
 
         if(!existingUser.isVerified) return Response.json({error: "Invalid email or password"}, {status: 401});
 
-        return Response.json({success: true, id:existingUser.id, name:existingUser.name, role:existingUser.role}, {status:200})
+        return Response.json({success: true, id:existingUser.id, name:existingUser.name, email:existingUser.email, role:existingUser.role}, {status:200})
 
     } catch (error) {
         return Response.json({ error: "Internal Server Error" }, { status: 500 });

@@ -77,9 +77,31 @@ export async function PATCH(req, { params }) {
     const userId = req.headers.get("userId");
     const body = await req.json();
 
+    const user = await prisma.user.findUnique({where:{id:userId}});
+    if(!user) {
+      return Response.json({error:"user not found"}, {status:401});
+    }
+
     const existing = await prisma.complaint.findUnique({ where: { id } });
-    if (!existing || existing.userId !== userId) {
+    if(!existing) {
+      return Response.json({error:"complaint not found"}, {status:404});
+    }
+
+    const isOwner = existing.userId === userId;
+    const isSupervisor = user.role === "SUPERVISOR";
+
+    //owner bhi ni h and supervisor bhi ni h to not allowed
+    if (!isOwner && !isSupervisor) {
       return Response.json({ error: "Unauthorized" }, { status: 403 });
+    }
+
+    const isChangingContent = body.title || body.description || body.category ||body.hostel || body.room || body.imageUrl !== undefined;
+
+    if(isChangingContent && !isOwner) {
+      return Response.json({error: "only the student can edit there complaint"});
+    }
+    if (body.status && !isSupervisor) {
+      return Response.json({error:"Only supervisors can update status"}, {status: 403 });
     }
 
     if ((existing.imageUrl && body.imageUrl && existing.imageUrl !== body.imageUrl) || (existing.imageUrl && body.imageUrl === null)) {
@@ -99,12 +121,15 @@ export async function PATCH(req, { params }) {
     const updated = await prisma.complaint.update({
       where: { id },
       data: {
-        title: body.title,
-        description: body.description,
-        category: body.category,
-        hostel: body.hostel,
-        room: body.room,
-        imageUrl: body.imageUrl
+        ...(isSupervisor && body.status && {status:body.status}),
+        ...(isOwner && {
+          title: body.title,
+          description: body.description,
+          category: body.category,
+          hostel: body.hostel,
+          room: body.room,
+          imageUrl: body.imageUrl
+        })
       }
     });
 

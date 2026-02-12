@@ -1,9 +1,39 @@
 'use client'
+import { getStoredUser } from '@/lib/auth';
 import Image from 'next/image';
 import React from 'react'
+import { toast } from 'sonner';
 
 function ComplaintPopUp({complaint, onClose}) {
   if (!complaint) return null;
+  const user = getStoredUser();
+  const isSupervisor = user?.role === "SUPERVISOR";
+
+  const statusStyles = {
+    PENDING: "bg-amber-100 text-amber-700 border-amber-200 border-2 rounded-md px-2 py-1",
+    RESOLVED: "bg-green-100 text-green-700 border-green-200 border-2 rounded-md px-2 py-1",
+    IN_PROGRESS: "bg-blue-100 text-blue-700 border-blue-200 border-2 rounded-md px-2 py-1",
+    REJECTED: "bg-red-100 text-red-700 border-red-200 border-2 rounded-md px-2 py-1"
+  };
+
+  async function handleStatusChange(newStatus) {
+    if(newStatus === complaint.status) return;
+    try {
+      const res = await fetch(`/api/complaints/${complaint.id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          "userId": user.id
+        },
+        body: JSON.stringify({status: newStatus})
+      });
+      if(res.ok) {
+        toast.success("Status updated")
+      }
+    } catch (error) {
+      
+    }
+  }
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm">
@@ -21,14 +51,31 @@ function ComplaintPopUp({complaint, onClose}) {
 
         <div className="p-8">
           {/* title */}
-          <div className="mb-6">
-            <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-full">
-              {complaint.category}
-            </span>
-            <h2 className="text-3xl font-bold text-gray-900 mt-3">{complaint.title}</h2>
-            <p className="text-sm text-gray-400 mt-2">
-              Reported by <span className="font-medium text-gray-700">{complaint.user?.name || "Student"}</span> • {new Date(complaint.createdAt).toLocaleDateString()}
-            </p>
+          <div className="mb-6 flex justify-between">
+            <div>
+              <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-full">
+                {complaint.category}
+              </span>
+              <h2 className="text-3xl font-bold text-gray-900 mt-3">{complaint.title}</h2>
+              <p className="text-sm text-gray-400 mt-2">
+                Reported by <span className="font-medium text-gray-700">{complaint.user?.name || "Student"}</span> • {new Date(complaint.createdAt).toLocaleDateString()}
+              </p>
+            </div>
+            {isSupervisor && (
+              <div className='mt-10 px-5'>
+                  <select 
+                    value={complaint.status}
+                    onChange={(e) => handleStatusChange(e.target.value)}
+                    className={`border-0 cursor-pointer transition-all ${statusStyles[complaint.status]}`}
+                  >
+                    <option value="PENDING" className={`${statusStyles["PENDING"]}`}>PENDING</option>
+                    <option value="IN_PROGRESS" className={`${statusStyles["IN_PROGRESS"]}`}>IN PROGRESS</option>
+                    <option value="RESOLVED" className={`${statusStyles["RESOLVED"]}`}>RESOLVED</option>
+                    <option value="REJECTED" className={`${statusStyles["REJECTED"]}`}>REJECTED</option>
+                  </select>
+              </div>
+            )}
+            
           </div>
 
           {/* description */}

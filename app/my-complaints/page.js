@@ -117,7 +117,7 @@ export default function MyComplaints() {
                 </div>
 
                 <p className="text-sm text-gray-600 mb-3">
-                  Category: {c.category} | Hostel: {c.hostel} | Room: {c.roomNo}
+                  Category: {c.category} | Hostel: {c.hostel} | Room: {c.room}
                 </p>
 
                 <p className="text-gray-600 text-sm mb-4 leading-relaxed">

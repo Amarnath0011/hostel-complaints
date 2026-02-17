@@ -5,6 +5,8 @@ import FilterBar from './FilterBar'
 import ComplaintPopUp from './ComplaintPopUp'
 
 function ComplaintFeed({initialComplaints = []}) {
+    const [complaints, setComplaints] = useState(initialComplaints);
+
     const [filters, setFilters] = useState({
         status: "ALL",
         category: "ALL",
@@ -12,9 +14,16 @@ function ComplaintFeed({initialComplaints = []}) {
         sort: "Newest",
     });
     const [selectedComplaint, setSelectedComplaint] = useState(null);
+    
+    function handleStatusUpdate (id, newStatus) {
+      setComplaints((prev) => 
+        prev.map((c) => (c.id === id 
+        ? {...c, status:newStatus}
+        :c)))
+    }
 
     // Filtering logic
-    const filtered = initialComplaints.filter((c) => {
+    const filtered = complaints.filter((c) => {
       const matchStatus = filters.status === "ALL" || c.status === filters.status;
       const matchCategory = filters.category === "ALL" || c.category === filters.category;
       const matchHostel = filters.hostel === "ALL" || (c.hostel && c.hostel === filters.hostel); 
@@ -24,6 +33,7 @@ function ComplaintFeed({initialComplaints = []}) {
         ? new Date(b.createdAt) - new Date(a.createdAt) 
         : new Date(a.createdAt) - new Date(b.createdAt);
     });
+
   
     return (
       <>
@@ -40,7 +50,11 @@ function ComplaintFeed({initialComplaints = []}) {
           ))}
         </div>
         {selectedComplaint && (
-          <ComplaintPopUp complaint= {selectedComplaint} onClose={() => setSelectedComplaint(null)}/>
+          <ComplaintPopUp 
+          complaint= {selectedComplaint} 
+          onClose={() => setSelectedComplaint(null)}
+          onStatusUpdate= {handleStatusUpdate}
+          />
         )}
       </>
     );

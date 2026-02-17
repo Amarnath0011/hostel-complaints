@@ -1,13 +1,14 @@
 'use client'
 import { getStoredUser } from '@/lib/auth';
 import Image from 'next/image';
-import React from 'react'
+import React, { useState } from 'react'
 import { toast } from 'sonner';
 
-function ComplaintPopUp({complaint, onClose}) {
-  if (!complaint) return null;
+function ComplaintPopUp({complaint, onClose, onStatusUpdate}) {
+  const [status, setStatus] = useState(complaint.status);
   const user = getStoredUser();
   const isSupervisor = user?.role === "SUPERVISOR";
+  if (!complaint) return null;
 
   const statusStyles = {
     PENDING: "bg-amber-100 text-amber-700 border-amber-200 border-2 rounded-md px-2 py-1",
@@ -28,10 +29,15 @@ function ComplaintPopUp({complaint, onClose}) {
         body: JSON.stringify({status: newStatus})
       });
       if(res.ok) {
+        setStatus(newStatus);
+        onStatusUpdate(complaint.id, newStatus);
         toast.success("Status updated")
+      } else {
+        const err = await res.json();
+        throw new Error(err.error || "Update failed");
       }
     } catch (error) {
-      
+      toast.error(error.message)
     }
   }
 
@@ -64,9 +70,9 @@ function ComplaintPopUp({complaint, onClose}) {
             {isSupervisor && (
               <div className='mt-10 px-5'>
                   <select 
-                    value={complaint.status}
+                    value={status}
                     onChange={(e) => handleStatusChange(e.target.value)}
-                    className={`border-0 cursor-pointer transition-all ${statusStyles[complaint.status]}`}
+                    className={`border-0 cursor-pointer transition-all ${statusStyles[status]}`}
                   >
                     <option value="PENDING" className={`${statusStyles["PENDING"]}`}>PENDING</option>
                     <option value="IN_PROGRESS" className={`${statusStyles["IN_PROGRESS"]}`}>IN PROGRESS</option>

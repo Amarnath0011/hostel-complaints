@@ -4,10 +4,10 @@ import ChangePassword from "../components/ChangePassword";
 
 export default function ResetPasswordPage() {
   const searchParams = useSearchParams();
-  const userId = searchParams.get("id");
+  const resetToken = searchParams.get("token");
   const router = useRouter();
 
-  if (!userId) {
+  if (!resetToken) {
     router.push("/forgot-password");
     return null;
   }
@@ -17,7 +17,7 @@ export default function ResetPasswordPage() {
       <div className="w-full max-w-md p-8 bg-white rounded-xl shadow-lg">
         <h1 className="text-2xl font-bold text-center mb-6">Create New Password</h1>
 
-        <ChangePassword userId={userId} isResetFlow={true} />
+        <ChangePassword token={resetToken} isResetFlow={true} />
       </div>
     </div>
   );

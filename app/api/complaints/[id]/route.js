@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 // import { PrismaClient } from '@prisma/client';
 // const prisma = new PrismaClient();
 import { v2 as cloudinary } from 'cloudinary';
+import jwt from 'jsonwebtoken'
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -12,42 +13,48 @@ cloudinary.config({
 
 export async function DELETE(req, { params }) {
   try {
-      const { id } = await params;
+    const { id } = await params;
 
-      const userId = req.headers.get("userId");
+    const authHeader = req.headers.get("authorization");
+    const token = authHeader?.split(" ")[1];
+    if(!token) return Response.json({ error: "Access token missing" }, { status: 401 });
 
-      if (!userId) {
-          return Response.json({ error: "Unauthorized" }, { status: 401 });
+    let userId;
+    try {
+      const decoded = jwt.verify(token, process.env.ACCESS_SECRET);
+      userId = decoded.id;
+    } catch (err) {
+      return Response.json({ error: "Invalid or expired token" }, { status: 401 });
+    }
+
+    const existingComplaint = await prisma.complaint.findUnique({where:{id}});
+
+    if (!existingComplaint) {
+        return Response.json({ error: "Complaint not found" }, { status: 404 });
+    }
+
+    if (existingComplaint.userId !== userId) {
+        return Response.json({ error: "You can only delete your own complaints" }, { status: 403 });
+    }
+
+    if (existingComplaint.imageUrl) {
+      try {
+        const splitUrl = existingComplaint.imageUrl.split('/');
+        const folderName = splitUrl[splitUrl.length - 2];
+        const fileName = splitUrl[splitUrl.length - 1].split('.')[0];
+        const publicId = `${folderName}/${fileName}`;
+
+        await cloudinary.uploader.destroy(publicId);
+      } catch (cloudErr) {
+        console.error("Cloudinary Delete Failed:", cloudErr);
       }
+    }
 
-      const existingComplaint = await prisma.complaint.findUnique({where:{id}});
+    await prisma.complaint.delete({
+        where: { id: id }
+    });
 
-      if (!existingComplaint) {
-          return Response.json({ error: "Complaint not found" }, { status: 404 });
-      }
-
-      if (existingComplaint.userId !== userId) {
-          return Response.json({ error: "You can only delete your own complaints" }, { status: 403 });
-      }
-
-      if (existingComplaint.imageUrl) {
-        try {
-          const splitUrl = existingComplaint.imageUrl.split('/');
-          const folderName = splitUrl[splitUrl.length - 2];
-          const fileName = splitUrl[splitUrl.length - 1].split('.')[0];
-          const publicId = `${folderName}/${fileName}`;
-
-          await cloudinary.uploader.destroy(publicId);
-        } catch (cloudErr) {
-          console.error("Cloudinary Delete Failed:", cloudErr);
-        }
-      }
-
-      await prisma.complaint.delete({
-          where: { id: id }
-      });
-
-      return Response.json({ message: "Complaint deleted successfully" }, { status: 200 });
+    return Response.json({ message: "Complaint deleted successfully" }, { status: 200 });
 
   } catch (error) {
       console.error("DELETE_ERROR:", error);
@@ -59,9 +66,19 @@ export async function GET(req, {params}) {
   try {
     const { id } = await params;
 
+    const authHeader = req.headers.get("authorization");
+    const token = authHeader?.split(" ")[1];
+    if (!token) return Response.json({ error: "No access token found" }, { status: 401 });
+
+    const decoded = jwt.verify(token, process.env.ACCESS_SECRET);
+
     const existingComplaint = await prisma.complaint.findUnique({where:{id}});
     if (!existingComplaint) {
       return Response.json({ error: "Complaint not found" }, { status: 404 });
+    }
+
+    if(existingComplaint.userId !== decoded.id) {
+      return Response.json({error:"Unauthorized access"}, {status: 403})
     }
 
     return Response.json(existingComplaint, { status: 200 });
@@ -74,7 +91,18 @@ export async function GET(req, {params}) {
 export async function PATCH(req, { params }) {
   try {
     const { id } = await params;
-    const userId = req.headers.get("userId");
+
+    const authHeader = req.headers.get("authorization");
+    const token = authHeader?.split(" ")[1];
+    if(!token) return Response.json({ error: "Access token missing" }, { status: 401 });
+
+    let userId;
+    try {
+      const decoded = jwt.verify(token, process.env.ACCESS_SECRET);
+      userId = decoded.id;
+    } catch (err) {
+      return Response.json({ error: "Invalid or expired token" }, { status: 401 });
+    }
     const body = await req.json();
 
     const user = await prisma.user.findUnique({where:{id:userId}});

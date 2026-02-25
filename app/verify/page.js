@@ -6,7 +6,7 @@ const Verify = () => {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
-  const userId = searchParams.get("id");
+  const resetToken = searchParams.get("token");
   const type = searchParams.get("type");
 
   const [otp, setOtp] = useState("");
@@ -27,7 +27,7 @@ const Verify = () => {
       const res = await fetch("/api/verify", {
         method: "POST",
         headers:{},
-        body: JSON.stringify({enteredOTP: otp, userId, type:type})
+        body: JSON.stringify({enteredOTP: otp, token:resetToken, type:type})
       })
       const data = await res.json();
       if(res.ok) {
@@ -37,7 +37,7 @@ const Verify = () => {
         }
         if(type === "PASSWORD_RESET") {
           toast.success("Email verified!");
-          router.push(`/reset-password?id=${userId}`);
+          router.push(`/reset-password?token=${data.token}`);
         }
       } else {
         toast.error(data.error || "Verification failed");

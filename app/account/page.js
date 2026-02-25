@@ -1,40 +1,32 @@
 "use client";
 import { useState, useEffect } from "react";
-import { getStoredUser, clearUser } from "@/lib/auth";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import ChangePassword from "../components/ChangePassword";
 import Navbar from "../components/Navbar";
+import { useAuth } from "../context/AuthContext";
 
 export default function Account() {
-  const [user, setUser] = useState(null);
+  const {user, accessToken, refresh, loading} = useAuth();
   const [passwords, setPasswords] = useState({ current: "", new: "" });
   const router = useRouter();
-
+  
   useEffect(() => {
-    const u = getStoredUser();
-    if (!u) router.push("/login");
-    setUser(u);
-  }, [router]);
+    if (!loading && !user) {
+      router.replace("/login");
+    }
+  }, [user, loading, router]);
 
-  const handlePasswordChange = async (e) => {
-    e.preventDefault();
-    ///api/account/change-password
-    toast.success("Password updated successfully!");
-    setPasswords({ current: "", new: "" });
-  };
+  if (!user) return null;
 
   const handleDeleteAccount = async () => {
     const confirmed = confirm("Are you sure? This will delete all your complaints and data permanently.");
     if (confirmed) {
       //api/account/delete
-      clearUser();
       router.push("/");
       toast.error("Account deleted.");
     }
   };
-
-  if (!user) return null;
 
   return (
     <>

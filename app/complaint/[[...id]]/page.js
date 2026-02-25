@@ -1,11 +1,11 @@
 'use client'
-import { getStoredUser } from '@/lib/auth';
 import React, { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import Navbar from '../../components/Navbar';
 import Image from 'next/image';
 import imageCompression from 'browser-image-compression';
+import { useAuth } from '@/app/context/AuthContext';
 
 function ComplaintForm() {
     const [formData, setFormData] = useState({title:'', description:'', category:'ELECTRICAL', hostel:'Girls Hostel A', room:''});
@@ -16,13 +16,31 @@ function ComplaintForm() {
 
     const [existingImageUrl, setExistingImageUrl] = useState(null);
 
+    const {user, accessToken, refresh} = useAuth();
+
     const router = useRouter();
-    // console.log(isEditMode)
+
     useEffect(() => {
       if(isEditMode) {
         const fetchExistingData = async() => {
           try {
-            const res = await fetch(`/api/complaints/${params.id}`);
+            let res = await fetch(`/api/complaints/${params.id}`, {
+              headers: { 
+                'Content-Type': 'application/json', 
+                'Authorization':`Bearer ${accessToken}`,
+              }
+            });
+            if(res.status === 401) {
+              const newToken = await refresh();
+              if (newToken) {
+                res = await fetch(`/api/complaints/${params.id}`, {
+                  headers: { 
+                    'Content-Type': 'application/json', 
+                    'Authorization':`Bearer ${accessToken}`,
+                  }
+                });
+              }
+            }
             const data = await res.json();
             if(res.ok) {
               setFormData({title:data.title, description:data.description, category:data.category, hostel:data.hostel, room:data.room});
@@ -38,17 +56,17 @@ function ComplaintForm() {
       }
     
       
-    }, [isEditMode, params.id])
+    }, [isEditMode, params.id, accessToken, refresh])
     
 
     async function handleSubmit(e) {
         e.preventDefault();
-        const user = getStoredUser();
+
         if(!user) {
             toast.alert("please login first");
-            return;
+            router.push('/');
         }
-        const userId = user.id;
+
         setLoading(true);
         try {
           let imageUrl = existingImageUrl;
@@ -71,7 +89,6 @@ function ComplaintForm() {
             if (!uploadRes.ok) throw new Error("Image upload failed");
             
             const uploadData = await uploadRes.json();
-            // console.log(uploadData.url);
             imageUrl = uploadData.url;
           }
           //agar edit kr rhe to patch otherwise post
@@ -79,11 +96,27 @@ function ComplaintForm() {
           const url = isEditMode ? `/api/complaints/${params.id}`: '/api/complaints';
           const method = isEditMode ? 'PATCH' : 'POST'
 
-          const res = await fetch(url, {
+          let res = await fetch(url, {
               method: method,
-              headers: { "userId": userId, 'Content-Type': 'application/json' },
+              headers: { 
+                'Content-Type': 'application/json',
+                'Authorization':`Bearer ${accessToken}` 
+              },
               body: JSON.stringify({...formData, imageUrl:imageUrl}),
           })
+          if (res.status === 401) {
+            const newToken = await refresh();
+            if (newToken) {
+              res = await fetch(url, {
+                method: method,
+                headers: { 
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${newToken}` 
+                },
+                body: JSON.stringify({ ...formData, imageUrl: imageUrl }),
+              });
+            }
+          }
           if(res.ok) {
               toast.success(isEditMode?"complaint edited successfully": "complaint submitted successfully");
               router.push('/my-complaints')

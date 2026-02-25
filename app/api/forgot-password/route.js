@@ -2,6 +2,7 @@ import generateOTP from "@/lib/otp";
 // import { PrismaClient } from "@prisma/client";
 // const prisma = new PrismaClient();
 import { prisma } from "@/lib/prisma";
+import jwt from 'jsonwebtoken'
 
 export async function POST(req) {
   try {
@@ -18,7 +19,13 @@ export async function POST(req) {
     
     console.log("Password Reset OTP for", email, "is", otpRecord.code);
 
-    return Response.json({ userId: user.id }, { status: 200 });
+    const resetToken = jwt.sign(
+      { userId: user.id, purpose: "password_reset" },
+      process.env.RESET_PASSWORD_SECRET,
+      { expiresIn: '5m' }
+    );
+
+    return Response.json({ resetToken }, { status: 200 });
   } catch (error) {
     return Response.json({ error: "Internal Server Error" }, { status: 500 });
   }

@@ -2,19 +2,17 @@
 import React, { useEffect, useRef, useState } from 'react'
 import Link from 'next/link';
 import { useRouter } from "next/navigation";
-import { getStoredUser, clearUser } from "@/lib/auth";
-import { toast, Toaster } from 'sonner';
+import { toast } from 'sonner';
+import { useAuth } from '../context/AuthContext';
 
 const Navbar = () => {
-    const [user, setUser] = useState(null);
+    const {user, logout, loading} = useAuth();
     const router = useRouter();
 
     const [isOpen, setIsOpen] = useState(false);
     const dropdownRef = useRef(null);   //it will detect clicking outside
 
     useEffect(() => {
-      const u = getStoredUser();
-      setUser(u);
       const handleClickOutside = (e) => {
         if(dropdownRef.current && !dropdownRef.current.contains(e.target)) {
             setIsOpen(false);
@@ -24,18 +22,17 @@ const Navbar = () => {
       return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
-    function handleLogout () {
-        clearUser();
-        setUser(null);
+    async function handleLogout () {
         setIsOpen(false);
+        await logout();  //logout function call hoga which is in AuthContext
         router.push('/');
+        toast.success("Logged out successfully")
     }
     function handleComplaint () {
         if(user) {
             router.push('/complaint');
         } else {
             toast.warning("You need to login before making a complaint");
-            // toast.warning
         }
     }
   return (

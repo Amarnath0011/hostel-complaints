@@ -1,12 +1,12 @@
 'use client'
-import { getStoredUser } from '@/lib/auth';
 import Image from 'next/image';
 import React, { useState } from 'react'
 import { toast } from 'sonner';
+import { useAuth } from '../context/AuthContext';
 
 function ComplaintPopUp({complaint, onClose, onStatusUpdate}) {
   const [status, setStatus] = useState(complaint.status);
-  const user = getStoredUser();
+  const {user, accessToken} = useAuth();
   const isSupervisor = user?.role === "SUPERVISOR";
   if (!complaint) return null;
 
@@ -22,9 +22,8 @@ function ComplaintPopUp({complaint, onClose, onStatusUpdate}) {
     try {
       const res = await fetch(`/api/complaints/${complaint.id}`, {
         method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          "userId": user.id
+        headers: { 
+          'Authorization':`Bearer ${accessToken}` 
         },
         body: JSON.stringify({status: newStatus})
       });

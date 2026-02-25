@@ -2,14 +2,16 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import React, { useState } from 'react'
-import { storeUser } from '@/lib/auth';
 import Navbar from '../components/Navbar';
 import { toast } from 'sonner';
+import { useAuth } from '../context/AuthContext';
 
 function LoginPage() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
+
+    const {setUser, setAccessToken} = useAuth();  //ye custom hook
 
     const router = useRouter();
 
@@ -29,9 +31,10 @@ function LoginPage() {
 
           const data = await res.json();
           if(res.ok) {
-            storeUser(data);
+            setUser(data.user);
+            setAccessToken(data.accessToken);
             router.push('/')
-            toast.success(`Welcome back!`);
+            toast.success(`Welcome back ${data.user.name}!`);
           } else {
             toast.error(data.error || "Invalid credentials");
           }
@@ -58,7 +61,7 @@ function LoginPage() {
             value={email}
             onChange={(e) => setEmail(e.target.value.trim())}
             className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-black"
-            placeholder="2024pgcsc070a@nitjsr.ac.in"
+            placeholder="2024pgcsca070@nitjsr.ac.in"
             required
           />
         </div>

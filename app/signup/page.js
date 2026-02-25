@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import React, { useEffect, useState } from 'react'
 import Navbar from '../components/Navbar';
 import { toast } from 'sonner';
+import { useAuth } from '../context/AuthContext';
 
 const Signup = () => {
     const [name, setName] = useState("");
@@ -11,17 +12,16 @@ const Signup = () => {
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
     const [loading, setLoading] = useState(false);
-
     const [errors, setErrors] = useState({});
-
+    const {user} = useAuth();
+    
     const router = useRouter();
-
     useEffect(() => {
-      const storedUser = localStorage.getItem("user");
-      if(storedUser) {
-        router.push("/");
+      if (user) {
+        router.replace('/'); // Use replace so they can't go back to signup
       }
-    }, [router]);
+      toast.message('You are already signed in')
+    }, [user, router]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();

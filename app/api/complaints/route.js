@@ -1,16 +1,24 @@
 import { prisma } from "@/lib/prisma";
+import jwt from 'jsonwebtoken'
 
 export async function POST(req) {
     try {
         const body = await req.json();
         //todo implement jwt
-        const userId = req.headers.get("userId");
-        //todo add image also
-        const {title, description, category, imageUrl, hostel, room} = body;
-        //todo add room no hostel too here and in schema too
-        if(!userId) {
-            return Response.json({error: "unauthorized"}, {status:401})
+        const authHeader = req.headers.get('authorization');
+        if (!authHeader) {
+          return Response.json({ error: "No token provided" }, { status: 401 });
         }
+        const token = authHeader?.split(" ")[1];
+        if(!token) return Response.json({ error: "Access token missing" }, { status: 401 }); 
+        const decoded = jwt.verify(token, process.env.ACCESS_SECRET);
+        const userId = decoded.id;
+        
+        if(!userId) {
+          return Response.json({error: "unauthorized"}, {status:401})
+        }
+
+        const {title, description, category, imageUrl, hostel, room} = body;
         if(!title || !description || !category || !hostel || !room) {
             return Response.json({error:"Missing required fields"}, {status:400})
         }
@@ -22,7 +30,7 @@ export async function POST(req) {
         return Response.json(complaint, { status: 201 });
     } catch (error) {
         console.error("Complaint Creation Error:", error);
-        return Response.json({error:"Internal server error"}, {status:500})
+        return handleAuthError(error);
     }
 }
 

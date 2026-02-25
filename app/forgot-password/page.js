@@ -22,11 +22,11 @@ const ForgotPassword = () => {
                 body: JSON.stringify({ email }),
             });
             const data = await res.json();
-            console.log(data);
+            // console.log(data);
             if(res.ok) {
                 toast.success('OTP sent to your college email!');
                 setEmail("");
-                router.push(`/verify?id=${data.userId}&type=PASSWORD_RESET`);
+                router.push(`/verify?token=${data.resetToken}&type=PASSWORD_RESET`);
             } else {
                 toast.error(data.error || "");
             }

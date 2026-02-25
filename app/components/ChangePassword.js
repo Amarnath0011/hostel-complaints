@@ -1,25 +1,19 @@
-import { getStoredUser } from '@/lib/auth';
+// import { getStoredUser } from '@/lib/auth';
 import React, { useState } from 'react'
 import { toast } from 'sonner';
+import { useAuth } from '../context/AuthContext';
 
-const ChangePassword = ({ userId: propUserId, isResetFlow = false }) => {
+const ChangePassword = ({ token, isResetFlow = false }) => {
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
     const [loading, setLoading] = useState(false);
     const [errors, setErrors] = useState({});
-    
+    const {user, accessToken} = useAuth();
 
     async function handleSubmit (e) {
         e.preventDefault();
         setLoading(true);
         let newErrors = {};
-        const user = getStoredUser();
-        const finalUserId = propUserId || user?.id;
-        if (!finalUserId) {
-            toast.error("User session not found. Please try again.");
-            setLoading(false);
-            return;
-        }
 
         const passwordRegex = /^(?=.*[!@#$%^&*])(?=.{8,})/;
         if (!passwordRegex.test(password)) {
@@ -35,12 +29,16 @@ const ChangePassword = ({ userId: propUserId, isResetFlow = false }) => {
           return;
         }
         try {
+            const headers = {'Content-Type': 'application/json',}
+
+            if(!isResetFlow && accessToken) {
+                headers['Authorization'] = `Bearer ${accessToken}`;
+            }
+
             const res = await fetch('/api/reset-password', {
                 method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ id:finalUserId , password }),
+                headers: headers,
+                body: JSON.stringify({password, ...(isResetFlow && {token})}),
               });
               const data = await res.json();
             if(res.ok) {

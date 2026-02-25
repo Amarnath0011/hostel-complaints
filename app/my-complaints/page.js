@@ -1,10 +1,10 @@
 "use client";
 import { useEffect, useState } from "react";
-import { getStoredUser } from "@/lib/auth";
 import { toast } from "sonner";
 import Navbar from "../components/Navbar";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { useAuth } from "../context/AuthContext";
 
 const statusStyles = {
     PENDING: "bg-amber-100 text-amber-700 border-amber-200 border-2 rounded-full px-2 py-1",
@@ -17,17 +17,32 @@ export default function MyComplaints() {
   const [complaints, setComplaints] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showConfirm, setShowConfirm] = useState(null);
+  const {user, loading: authLoading, accessToken, refresh} = useAuth();
 
   const router = useRouter();
 
   useEffect(() => {
+    if(authLoading) return;
+    if (!user || !accessToken) return;
     async function fetchComplaints() {
-      const user = getStoredUser();
-      if (!user) return;
       try {
-        const res = await fetch(`/api/my-complaints?userId=${user.id}`);
+        let res = await fetch(`/api/my-complaints`, {
+          headers:{
+            'Authorization':`Bearer ${accessToken}`
+          }
+        });
+        if(res.status === 401) {
+          const newToken = await refresh();;
+          if(newToken) {
+            res = await fetch(`/api/my-complaints`, {
+              headers:{
+                'Authorization':`Bearer ${newToken}`
+              }
+            });
+          }
+        }
         const json = await res.json();
-        
+
         if (res.ok) {
           setComplaints(json.data);
         } else {
@@ -40,24 +55,25 @@ export default function MyComplaints() {
       }
     }
     fetchComplaints();
-  }, []);
+  }, [user, authLoading, accessToken, refresh]);
+
 
   if (loading) return <div className="p-10 text-center">Loading your history...</div>;
 
   
   async function handleDelete(complaintId) {
-    const user = getStoredUser();
     if (!user?.id) {
       toast.error("You must be logged in to do that.");
       return;
     }
+    console.log(accessToken)
 
     toast.loading("Deleting complaint...", { id: "delete-toast" });
 
     try {
       const res = await fetch(`/api/complaints/${complaintId}`, {
         method: "DELETE",
-        headers: { "userId": user.id }
+        headers: { "Authorization": `Bearer ${accessToken}` }
       });
 
       const data = await res.json();

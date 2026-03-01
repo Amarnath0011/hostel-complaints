@@ -1,7 +1,7 @@
 'use client'
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import React, { useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import Navbar from '../components/Navbar';
 import { toast } from 'sonner';
 import { useAuth } from '../context/AuthContext';
@@ -11,13 +11,22 @@ function LoginPage() {
     const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
 
-    const {setUser, setAccessToken} = useAuth();  //ye custom hook
+    const {user, setUser, setAccessToken} = useAuth();  //ye custom hook
+    const hasCheckedInitialAuth = useRef(false);
 
     const router = useRouter();
+    useEffect(() => {
+      if (user && !hasCheckedInitialAuth.current) {
+        toast.message('You are already logged in')
+        router.replace('/'); // Use replace so they can't go back to signup
+      }
+      hasCheckedInitialAuth.current = true;
+    }, [user, router]);
 
     const handleLogin = async(e) => {
         e.preventDefault();
-        if (!email.endsWith("@nitjsr.ac.in")) {
+        const normalizedEmail = email.trim().toLowerCase();
+        if (!normalizedEmail.endsWith("@nitjsr.ac.in")) {
           toast.error("Please use your official @nitjsr.ac.in email");
           return;
         }
@@ -26,7 +35,7 @@ function LoginPage() {
           const res = await fetch('/api/login', {
               method: 'POST',
               headers: {'Content-Type': 'application/json'},
-              body:JSON.stringify({email, password})
+              body:JSON.stringify({email: normalizedEmail, password})
           });
 
           const data = await res.json();
@@ -47,9 +56,9 @@ function LoginPage() {
     }
 
   return (
-    <>
+    <div className='flex flex-col h-screen'>
     <Navbar />
-    <div className="flex min-h-screen items-center justify-center bg-gray-50">
+    <div className="flex flex-1 items-center justify-center bg-gray-50">
       <form onSubmit={handleLogin} className="w-96 bg-white p-8 rounded-xl shadow-md border border-gray-100">
         
         <h1 className="text-2xl font-bold mb-6 text-center text-gray-800">Welcome Back</h1>
@@ -99,7 +108,7 @@ function LoginPage() {
         </p>
       </form>
     </div>
-    </>
+    </div>
   )
 }
 export default LoginPage

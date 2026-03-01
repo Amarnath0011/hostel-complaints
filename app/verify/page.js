@@ -6,7 +6,7 @@ const Verify = () => {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
-  const resetToken = searchParams.get("token");
+  const token = searchParams.get("token");
   const type = searchParams.get("type");
 
   const [otp, setOtp] = useState("");
@@ -27,7 +27,7 @@ const Verify = () => {
       const res = await fetch("/api/verify", {
         method: "POST",
         headers:{},
-        body: JSON.stringify({enteredOTP: otp, token:resetToken, type:type})
+        body: JSON.stringify({enteredOTP: otp, token:token, type:type})
       })
       const data = await res.json();
       if(res.ok) {

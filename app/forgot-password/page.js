@@ -9,7 +9,8 @@ const ForgotPassword = () => {
     const router = useRouter();
     async function handleSubmit(e) {
         e.preventDefault();
-        if(!email.endsWith("@nitjsr.ac.in")) {
+        const normalizedEmail = email.trim().toLowerCase();
+        if(!normalizedEmail.endsWith("@nitjsr.ac.in")) {
             toast.error("Use your official college email id");
             return;
         }
@@ -19,7 +20,7 @@ const ForgotPassword = () => {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ email }),
+                body: JSON.stringify({ email:normalizedEmail }),
             });
             const data = await res.json();
             // console.log(data);

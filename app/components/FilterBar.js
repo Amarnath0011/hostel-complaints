@@ -4,7 +4,7 @@ import { useState } from "react";
 
 export default function FilterBar({filters, setFilters}) {
   return (
-    <div className="flex flex-wrap items-center gap-3 rounded-lg border border-gray-100 bg-white p-3 shadow-md">
+    <div className="flex flex-wrap items-center gap-3 rounded-lg border border-gray-100 bg-white p-3 shadow-md sticky top-16 z-30">
       
       {/* status */}
       <div className="flex gap-1 rounded-md bg-gray-100 p-1">

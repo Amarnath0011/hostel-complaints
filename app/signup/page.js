@@ -18,9 +18,9 @@ const Signup = () => {
     const router = useRouter();
     useEffect(() => {
       if (user) {
+        toast.message('You are already signed in')
         router.replace('/'); // Use replace so they can't go back to signup
       }
-      toast.message('You are already signed in')
     }, [user, router]);
 
     const handleSubmit = async (e) => {
@@ -30,7 +30,9 @@ const Signup = () => {
         
         let newErrors = {};
 
-        if(!email.endsWith("@nitjsr.ac.in")) {
+        const normalizedEmail = email.trim().toLowerCase();
+
+        if(!normalizedEmail.endsWith("@nitjsr.ac.in")) {
           newErrors.email = "Use your official college email id";
         }
 
@@ -53,7 +55,7 @@ const Signup = () => {
             headers: {
               'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ name, email, password }),
+            body: JSON.stringify({ name, email: normalizedEmail, password }),
           });
           const data = await res.json();
           if(res.ok) {
@@ -62,7 +64,7 @@ const Signup = () => {
             setEmail("");
             setPassword("");
             setConfirmPassword("");
-            router.push(`/verify?id=${data.id}&type=SIGNUP`);
+            router.push(`/verify?token=${data.token}&type=SIGNUP`);
           } else {
             toast.error(data.error || "Signup failed");
           }
@@ -74,9 +76,9 @@ const Signup = () => {
     }
 
   return (
-    <>
+    <div className='flex flex-col h-screen'>
     <Navbar />
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
+    <div className="flex flex-1 items-center justify-center bg-gray-50 px-4">
         <form onSubmit={handleSubmit} className="flex flex-col gap-4 w-full max-w-md bg-white p-8 rounded-xl shadow-lg border border-gray-100">
             <h2 className="text-2xl font-bold text-center text-gray-800 mb-2">Create an Account</h2>
             
@@ -165,7 +167,7 @@ const Signup = () => {
             </p>
         </form>
     </div>
-    </>
+    </div>
   )
 }
 

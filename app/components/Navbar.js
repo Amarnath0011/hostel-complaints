@@ -36,12 +36,12 @@ const Navbar = () => {
         }
     }
   return (
-    <nav className='flex items-center justify-between px-5 w-full h-16 sticky top-0 bg-white border-b shadow-sm'>
+    <nav className='flex items-center justify-between px-5 w-full h-16 sticky top-0 bg-white border-b shadow-sm z-50'>
         <div>
             <Link href="/" className='text-3xl font-bold text-blue-500 tracking-tighter'> Hostel<span className='text-gray-800'>Complaints</span></Link>
         </div>
 
-        <div className='flex'>
+        <div className='flex items-center'>
             
             {/* <Link href= "/complaint"> */}
                 <button className='mr-12 bg-blue-500 rounded-lg p-2 text-white' onClick={handleComplaint}>Make a Complaint</button>

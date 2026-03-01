@@ -6,7 +6,11 @@ import jwt from 'jsonwebtoken'
 
 export async function POST(req) {
   try {
-    const { email } = await req.json();
+    let { email } = await req.json();
+    if(!email) {
+      return Response.json({ error: "Missing required fields" }, { status: 400 });
+    }
+    email = email.trim().toLowerCase();
 
     const user = await prisma.user.findUnique({ where: { email } });
 

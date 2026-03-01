@@ -3,10 +3,13 @@ import {prisma} from '@/lib/prisma'
 // import { PrismaClient } from "@prisma/client";
 // const prisma = new PrismaClient();
 import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken'
 export async function POST(req) {
   try {
     const body = await req.json();
-    const {name, email, password} = body;
+    let {name, email, password} = body;
+
+    if(email) email = email.trim().toLowerCase();
 
     if (!name || !email || !password) {
       return Response.json({ error: "Missing required fields" }, { status: 400 });
@@ -28,39 +31,41 @@ export async function POST(req) {
         return Response.json({ error: "Password too weak" }, { status: 400 });
     }
 
+    const hashedPass = await bcrypt.hash(password, 10);
+    let userId;
+
     const existingUser = await prisma.user.findUnique({where:{email}});
     if(existingUser) {
       if(existingUser.isVerified === true) {
         return Response.json({error: "Email already registered"}, {status: 409})
       }
-      const hashedPass = await bcrypt.hash(password, 10);
       //if user comes back to signup then update the details
-      await prisma.user.update({
+      const updatedUser = await prisma.user.update({
         where: {id: existingUser.id}, 
         data:{
           name: name,
           password: hashedPass
         }
       })
-      const newOTP = await generateOTP(existingUser.id, "SIGNUP");
-      //send otp via nodemailer
-      console.log("otp for", email, "is", newOTP.code);
-      const id = existingUser.id;
-      return Response.json({message: "otp sent to your mail", id}, {status:200});
+      userId = updatedUser.id;
+    } else {
+      const newUser = await prisma.user.create({
+        data: {
+          name,
+          email,
+          password: hashedPass
+        },
+      });
+      userId = newUser.id;
     }
-    const hashedPass = await bcrypt.hash(password, 10);
-    
-    const newUser = await prisma.user.create({
-      data: {
-        name,
-        email,
-        password: hashedPass
-      },
-    });
-    const newUserOTP = await generateOTP(newUser.id, "SIGNUP");
-    console.log("OTP for NEW user", email, "is", newUserOTP.code);
-    const id = newUser.id
-    return Response.json({ success: true, id }, { status: 201 });
+
+      //send otp via nodemailer
+    const newOTP = await generateOTP(userId, "SIGNUP");
+    console.log("OTP for", email, "is", newOTP.code);
+
+    const token = jwt.sign({userId: userId, type: "SIGNUP"}, process.env.SIGNUP_SECRET, {expiresIn:'5m'});
+
+    return Response.json({ success: true, token }, { status: 201 });
   } catch (error) {
     console.error("Registration Error:", error);
     return Response.json({error: "Internal server error"}, {status: 500})

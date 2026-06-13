@@ -1,5 +1,5 @@
 'use client'
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 
 const AuthContext = createContext();
 
@@ -17,38 +17,38 @@ export function AuthProvider({ children }) {
         setUser(data.user);
       } else {
         setUser(null);
+        setAccessToken(null);
       }
     } catch (error) {
       setUser(null);
+      setAccessToken(null);
     } finally {
       setLoading(false);
     }
   };
-
-  useEffect(() => {
-    refreshTokens();// whenever user refreshes new access token laao
-  }, []);
-
-  const refresh = async () => {
-    try {
-      const res = await fetch('/api/auth/refresh', { method: 'POST' });
-      if (!res.ok) throw new Error("Refresh failed");
-      
-      const data = await res.json();
-      setAccessToken(data.accessToken);
-      setUser(data.user);
-      return data.accessToken; // Return the new token and retry
-    } catch (err) {
-      logout(); // If refresh fails then user ko login krna pdega
-      return null;
-    }
-  };
-
-  const logout = async () => {
+  const logout = useCallback(async () => {
     await fetch('/api/auth/logout', { method: 'POST' });
     setUser(null);
     setAccessToken(null);
-  };
+  }, []);
+
+  const refresh = useCallback(async () => {
+    try {
+      const res = await fetch('/api/auth/refresh', { method: 'POST' });
+      if (!res.ok) throw new Error("Refresh failed");
+  
+      const data = await res.json();
+      setAccessToken(data.accessToken);
+      setUser(data.user);
+      return data.accessToken;
+    } catch (err) {
+      await logout();
+      return null;
+    }
+  }, [logout]);
+  useEffect(() => {
+    refreshTokens();
+  }, []);
 
   return (
     <AuthContext.Provider value={{ user, setUser, accessToken, setAccessToken, logout, loading, refresh }}>

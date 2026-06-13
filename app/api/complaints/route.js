@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import jwt from 'jsonwebtoken'
+import { handleAuthError } from "@/lib/auth";
 
 export async function POST(req) {
     try {

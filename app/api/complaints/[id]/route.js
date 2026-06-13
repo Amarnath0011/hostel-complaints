@@ -70,7 +70,12 @@ export async function GET(req, {params}) {
     const token = authHeader?.split(" ")[1];
     if (!token) return Response.json({ error: "No access token found" }, { status: 401 });
 
-    const decoded = jwt.verify(token, process.env.ACCESS_SECRET);
+    let decoded;
+    try {
+      decoded = jwt.verify(token, process.env.ACCESS_SECRET);
+    } catch (err) {
+      return Response.json({error:"Invalid or expired token"}, {status:401})
+    }
 
     const existingComplaint = await prisma.complaint.findUnique({where:{id}});
     if (!existingComplaint) {

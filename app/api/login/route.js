@@ -24,8 +24,8 @@ export async function POST(req) {
 
         if(!existingUser.isVerified) return Response.json({error: "Invalid email or password"}, {status: 401});
 
-        const accessToken = jwt.sign({id: existingUser.id}, process.env.ACCESS_SECRET, {expiresIn:'15s'});
-        const refreshToken = jwt.sign({id:existingUser.id}, process.env.REFRESH_SECRET, {expiresIn:'30s'});
+        const accessToken = jwt.sign({id: existingUser.id}, process.env.ACCESS_SECRET, {expiresIn:'15m'});
+        const refreshToken = jwt.sign({id:existingUser.id}, process.env.REFRESH_SECRET, {expiresIn:'15d'});
 
         const cookie = await cookies();
         cookie.set("refreshToken", refreshToken, {
@@ -33,8 +33,8 @@ export async function POST(req) {
             sameSite:"strict",
             // secure
             path:"/",
-            // maxAge:60*60*24*15,
-            maxAge:15
+            maxAge:60*60*24*15,
+            // maxAge:15
         })
 
         return Response.json({success: true, accessToken, user: {id:existingUser.id, name:existingUser.name, email:existingUser.email, role:existingUser.role}}, {status:200})

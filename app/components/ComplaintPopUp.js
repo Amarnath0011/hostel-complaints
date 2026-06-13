@@ -6,7 +6,7 @@ import { useAuth } from '../context/AuthContext';
 
 function ComplaintPopUp({complaint, onClose, onStatusUpdate}) {
   const [status, setStatus] = useState(complaint.status);
-  const {user, accessToken} = useAuth();
+  const {user, accessToken, refresh} = useAuth();
   const isSupervisor = user?.role === "SUPERVISOR";
   if (!complaint) return null;
 
@@ -20,13 +20,29 @@ function ComplaintPopUp({complaint, onClose, onStatusUpdate}) {
   async function handleStatusChange(newStatus) {
     if(newStatus === complaint.status) return;
     try {
-      const res = await fetch(`/api/complaints/${complaint.id}`, {
+      let res = await fetch(`/api/complaints/${complaint.id}`, {
         method: "PATCH",
         headers: { 
+          'Content-Type': 'application/json',
           'Authorization':`Bearer ${accessToken}` 
         },
         body: JSON.stringify({status: newStatus})
       });
+
+      if (res.status === 401) {
+        const newToken = await refresh();
+        if (newToken) {
+          res = await fetch(`/api/complaints/${complaint.id}`, {
+            method: "PATCH",
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${newToken}`
+            },
+            body: JSON.stringify({ status: newStatus })
+          });
+        }
+      }
+
       if(res.ok) {
         setStatus(newStatus);
         onStatusUpdate(complaint.id, newStatus);

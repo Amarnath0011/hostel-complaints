@@ -3,21 +3,28 @@
 import { useState } from "react";
 
 export default function FilterBar({filters, setFilters}) {
+  const statuses = [
+    { value: "ALL", label: "ALL" },
+    { value: "PENDING", label: "PENDING" },
+    { value: "IN_PROGRESS", label: "IN PROGRESS" },
+    { value: "RESOLVED", label: "RESOLVED" },
+    { value: "REJECTED", label: "REJECTED" },
+  ];
   return (
     <div className="flex flex-wrap items-center gap-3 rounded-lg border border-gray-100 bg-white p-3 shadow-md sticky top-16 z-30">
       
       {/* status */}
       <div className="flex gap-1 rounded-md bg-gray-100 p-1">
-        {["ALL", "PENDING", "IN PROGRESS", "RESOLVED", "REJECTED"].map((status) => (
+        {statuses.map((status) => (
           <button
-            key={status}
-            onClick={() => setFilters({ ...filters, status })}
+            key={status.value}
+            onClick={() => setFilters({ ...filters, status: status.value })}
             className={`px-3 py-1 text-sm rounded-md transition
-              ${filters.status === status
+              ${filters.status === status.value
                 ? "bg-blue-700 shadow text-white"
                 : "text-gray-500 hover:text-gray-700"} ease-in`}
           >
-            {status}
+            {status.label}
           </button>
         ))}
       </div>

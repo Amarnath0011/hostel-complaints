@@ -23,7 +23,11 @@ export default function MyComplaints() {
 
   useEffect(() => {
     if(authLoading) return;
-    if (!user || !accessToken) return;
+    if (!user || !accessToken) {
+      setLoading(false);
+      router.replace("/login");
+      return;
+    }
     async function fetchComplaints() {
       try {
         let res = await fetch(`/api/my-complaints`, {
@@ -66,15 +70,25 @@ export default function MyComplaints() {
       toast.error("You must be logged in to do that.");
       return;
     }
-    console.log(accessToken)
+    // console.log(accessToken)
 
     toast.loading("Deleting complaint...", { id: "delete-toast" });
 
     try {
-      const res = await fetch(`/api/complaints/${complaintId}`, {
+      let res = await fetch(`/api/complaints/${complaintId}`, {
         method: "DELETE",
         headers: { "Authorization": `Bearer ${accessToken}` }
       });
+
+      if (res.status === 401) {
+        const newToken = await refresh();
+        if (newToken) {
+          res = await fetch(`/api/complaints/${complaintId}`, {
+            method: "DELETE",
+            headers: { "Authorization": `Bearer ${newToken}` }
+          });
+        }
+      }
 
       const data = await res.json();
 

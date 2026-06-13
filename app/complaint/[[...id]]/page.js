@@ -36,7 +36,7 @@ function ComplaintForm() {
                 res = await fetch(`/api/complaints/${params.id}`, {
                   headers: { 
                     'Content-Type': 'application/json', 
-                    'Authorization':`Bearer ${accessToken}`,
+                    'Authorization':`Bearer ${newToken}`,
                   }
                 });
               }

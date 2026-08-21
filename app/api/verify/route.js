@@ -7,7 +7,10 @@ export async function POST(req) {
     try{
         const body = await req.json();
         const {enteredOTP, token, type} = body;
-        const decoded = jwt.verify(token, process.env.RESET_PASSWORD_SECRET);
+        const secret = type === "SIGNUP"
+            ? process.env.SIGNUP_SECRET
+            : process.env.RESET_PASSWORD_SECRET;
+        const decoded = jwt.verify(token, secret);
         const userId = decoded.userId;
         
         const savedOTPRecord = await prisma.oTP.findFirst({where: {userId: userId, type: type }, orderBy: { createdAt: 'desc' }});

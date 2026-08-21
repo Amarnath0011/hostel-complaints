@@ -1,15 +1,6 @@
 import { prisma } from "@/lib/prisma";
-
-// import { PrismaClient } from '@prisma/client';
-// const prisma = new PrismaClient();
-import { v2 as cloudinary } from 'cloudinary';
+import { cloudinary, hasCloudinaryConfig } from "@/lib/cloudinary";
 import jwt from 'jsonwebtoken'
-
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
 
 export async function DELETE(req, { params }) {
   try {
@@ -37,7 +28,7 @@ export async function DELETE(req, { params }) {
         return Response.json({ error: "You can only delete your own complaints" }, { status: 403 });
     }
 
-    if (existingComplaint.imageUrl) {
+    if (existingComplaint.imageUrl && hasCloudinaryConfig()) {
       try {
         const splitUrl = existingComplaint.imageUrl.split('/');
         const folderName = splitUrl[splitUrl.length - 2];
@@ -137,7 +128,11 @@ export async function PATCH(req, { params }) {
       return Response.json({error:"Only supervisors can update status"}, {status: 403 });
     }
 
-    if ((existing.imageUrl && body.imageUrl && existing.imageUrl !== body.imageUrl) || (existing.imageUrl && body.imageUrl === null)) {
+    if (
+      hasCloudinaryConfig() &&
+      ((existing.imageUrl && body.imageUrl && existing.imageUrl !== body.imageUrl) ||
+        (existing.imageUrl && body.imageUrl === null))
+    ) {
       try {
         const splitUrl = existing.imageUrl.split('/');
         const folderName = splitUrl[splitUrl.length - 2];

@@ -2,16 +2,17 @@
  * @param {Request} req
  */
 
-import { v2 as cloudinary } from 'cloudinary'
-
-cloudinary.config({
-    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-    api_key: process.env.CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_API_SECRET,
-});
+import { cloudinary, hasCloudinaryConfig } from "@/lib/cloudinary";
 
 export async function POST(req) {
     try {
+        if (!hasCloudinaryConfig()) {
+            return Response.json(
+                { error: "Cloudinary is not configured. Add Cloudinary keys to .env and restart the dev server." },
+                { status: 503 }
+            );
+        }
+
         const body = await req.formData();
         const file = body.get("file");
         if(!file) {

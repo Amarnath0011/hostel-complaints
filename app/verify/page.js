@@ -1,8 +1,9 @@
 "use client"
 import { useRouter, useSearchParams } from 'next/navigation';
-import React, { useEffect, useState } from 'react'
+import React, { Suspense, useEffect, useState } from 'react'
 import { toast } from 'sonner';
-const Verify = () => {
+
+const VerifyContent = () => {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -56,7 +57,7 @@ const Verify = () => {
       const res = await fetch("/api/resend-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId, type })
+        body: JSON.stringify({ token, type })
       });
       const data = await res.json();
       if (!res.ok) {
@@ -117,4 +118,10 @@ const Verify = () => {
   )
 }
 
-export default Verify
+export default function Verify() {
+  return (
+    <Suspense fallback={null}>
+      <VerifyContent />
+    </Suspense>
+  );
+}

@@ -1,16 +1,20 @@
 "use client";
+import { Suspense, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import ChangePassword from "../components/ChangePassword";
 
-export default function ResetPasswordPage() {
+function ResetPasswordContent() {
   const searchParams = useSearchParams();
   const resetToken = searchParams.get("token");
   const router = useRouter();
 
-  if (!resetToken) {
-    router.push("/forgot-password");
-    return null;
-  }
+  useEffect(() => {
+    if (!resetToken) {
+      router.push("/forgot-password");
+    }
+  }, [resetToken, router]);
+
+  if (!resetToken) return null;
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -20,5 +24,13 @@ export default function ResetPasswordPage() {
         <ChangePassword token={resetToken} isResetFlow={true} />
       </div>
     </div>
+  );
+}
+
+export default function ResetPasswordPage() {
+  return (
+    <Suspense fallback={null}>
+      <ResetPasswordContent />
+    </Suspense>
   );
 }

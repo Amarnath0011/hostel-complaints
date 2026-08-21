@@ -17,6 +17,7 @@ export default function MyComplaints() {
   const [complaints, setComplaints] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showConfirm, setShowConfirm] = useState(null);
+  const [selectedImage, setSelectedImage] = useState(null);
   const {user, loading: authLoading, accessToken, refresh} = useAuth();
 
   const router = useRouter();
@@ -59,7 +60,7 @@ export default function MyComplaints() {
       }
     }
     fetchComplaints();
-  }, [user, authLoading, accessToken, refresh]);
+  }, [user, authLoading, accessToken, refresh, router]);
 
 
   if (loading) return <div className="p-10 text-center">Loading your history...</div>;
@@ -204,6 +205,29 @@ export default function MyComplaints() {
           </div>
         </div>
       )}
+    {selectedImage && (
+      <div
+        className="fixed inset-0 z-[120] flex items-center justify-center bg-black/70 p-4"
+        onClick={() => setSelectedImage(null)}
+      >
+        <div className="relative h-[80vh] w-full max-w-4xl">
+          <Image
+            src={selectedImage}
+            alt="Complaint attachment preview"
+            fill
+            className="object-contain"
+          />
+        </div>
+        <button
+          type="button"
+          aria-label="Close image preview"
+          className="absolute right-4 top-4 rounded-full bg-white/90 px-3 py-1.5 text-sm font-bold text-gray-800 shadow"
+          onClick={() => setSelectedImage(null)}
+        >
+          Close
+        </button>
+      </div>
+    )}
     </>
   );
 }

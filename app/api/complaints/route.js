@@ -76,8 +76,17 @@ export async function GET(req) {
     } catch (error) {
       console.error(error);
       return Response.json(
-        { error: "Failed to fetch complaints" },
-        { status: 500 }
+        {
+          data: [],
+          pagination: {
+            total: 0,
+            page: 1,
+            limit: 10,
+            totalPages: 0,
+          },
+          error: "Database is not connected",
+        },
+        { status: 200 }
       );
     }
   }

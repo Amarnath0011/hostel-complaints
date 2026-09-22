@@ -1,4 +1,3 @@
-
 pipeline {
     agent any
 
@@ -8,7 +7,7 @@ pipeline {
 
     environment {
         DOCKER_IMAGE = 'amarnath0011/hostel-complaints'
-         EC2_HOST = '13.127.48.231'
+        EC2_HOST = '13.127.48.231'
     }
 
     stages {
@@ -105,43 +104,54 @@ pipeline {
                 '''
             }
         }
+
         stage('Deploy to EC2') {
-    steps {
-        withCredentials([
-            sshUserPrivateKey(
-                credentialsId: 'ec2-ssh-key',
-                keyFileVariable: 'SSH_KEY',
-                usernameVariable: 'SSH_USER'
-            )
-        ]) {
-            sh '''
-                ssh -o StrictHostKeyChecking=no \
-                    -i "$SSH_KEY" \
-                    "$SSH_USER@$EC2_HOST" << 'EOF'
+            steps {
+                withCredentials([
+                    sshUserPrivateKey(
+                        credentialsId: 'ec2-ssh-key',
+                        keyFileVariable: 'SSH_KEY',
+                        usernameVariable: 'SSH_USER'
+                    )
+                ]) {
+                    sh '''
+                        ssh -o StrictHostKeyChecking=no \
+                            -i "$SSH_KEY" \
+                            "$SSH_USER@$EC2_HOST" << 'EOF'
 
-                docker pull amarnath0011/hostel-complaints:latest
+                        set -e
 
-                docker stop hostel-complaints || true
-                docker rm hostel-complaints || true
+                        echo "Pulling latest image..."
+                        docker pull amarnath0011/hostel-complaints:latest
 
-                docker run -d \
-                    --name hostel-complaints \
-                    --restart unless-stopped \
-                    -p 3000:3000 \
-                    --env-file ~/.env \
-                    amarnath0011/hostel-complaints:latest
+                        echo "Stopping old container..."
+                        docker stop hostel-complaints || true
 
-                sleep 5
+                        echo "Removing old container..."
+                        docker rm hostel-complaints || true
 
-                docker ps --filter "name=hostel-complaints"
+                        echo "Starting new container..."
+                        docker run -d \
+                            --name hostel-complaints \
+                            --restart unless-stopped \
+                            -p 3000:3000 \
+                            --env-file ~/.env \
+                            amarnath0011/hostel-complaints:latest
 
-                docker image prune -f
+                        echo "Waiting for application..."
+                        sleep 5
 
-                EOF
-            '''
+                        echo "Checking container..."
+                        docker ps --filter "name=hostel-complaints"
+
+                        echo "Cleaning unused Docker images..."
+                        docker image prune -f
+
+EOF
+                    '''
+                }
+            }
         }
-    }
-}
     }
 
     post {
@@ -166,6 +176,4 @@ pipeline {
             sh 'docker logout || true'
         }
     }
-    
 }
-

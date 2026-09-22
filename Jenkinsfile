@@ -128,7 +128,7 @@ pipeline {
                     --name hostel-complaints \
                     --restart unless-stopped \
                     -p 3000:3000 \
-                    --env-file ~/hostel-complaints.env \
+                    --env-file ~/.env \
                     amarnath0011/hostel-complaints:latest
 
                 sleep 5

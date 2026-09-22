@@ -6,6 +6,13 @@ pipeline {
         nodejs 'node22'
     }
 
+    stage('Check Node') {
+            steps {
+                sh 'node --version'
+                sh 'npm --version'
+            }
+        }
+
     stages {
 
         stage('Install Dependencies') {

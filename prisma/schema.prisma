@@ -1,15 +1,64 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
+}
+
+model User {
+  id         String      @id @default(uuid())
+  email      String      @unique
+  password   String
+  name       String
+  role       Role        @default(STUDENT)
+  createdAt  DateTime    @default(now())
+  isVerified Boolean     @default(false)
+  comments   Comment[]
+  complaints Complaint[]
+  otps       OTP[]
+}
+
+model Complaint {
+  id          String    @id @default(uuid())
+  title       String
+  description String
+  category    Category
+  imageUrl    String?
+  status      Status    @default(PENDING)
+  userId      String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  hostel      String?
+  room        String?
+  comments    Comment[]
+  user        User      @relation(fields: [userId], references: [id])
+}
+
+model Comment {
+  id          String    @id @default(uuid())
+  content     String
+  userId      String
+  complaintId String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  complaint   Complaint @relation(fields: [complaintId], references: [id], onDelete: Cascade)
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([complaintId, createdAt])
+  @@index([userId])
+}
+
+model OTP {
+  id        String   @id @default(cuid())
+  code      String
+  type      OTPType
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, type])
 }
 
 enum Role {
@@ -32,64 +81,7 @@ enum Category {
   OTHER
 }
 
-model User {
-  id        String      @id @default(uuid())
-  email     String      @unique
-  password  String
-  name      String
-  role      Role        @default(STUDENT)
-  isVerified Boolean    @default(false)
-  complaints Complaint[]
-  comments   Comment[]
-  createdAt DateTime    @default(now())
-  otps       OTP[]
-}
-
-model Complaint {
-  id          String    @id @default(uuid())
-  title       String
-  description String
-  hostel      String?
-  room        String?
-  category    Category
-  imageUrl    String?
-  status      Status    @default(PENDING)
-  userId      String
-  user        User      @relation(fields: [userId], references: [id])
-  comments    Comment[]
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-}
-
-model Comment {
-  id          String    @id @default(uuid())
-  content     String
-  userId      String
-  complaintId String
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  complaint   Complaint @relation(fields: [complaintId], references: [id], onDelete: Cascade)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-
-  @@index([complaintId, createdAt])
-  @@index([userId])
-}
-
 enum OTPType {
   SIGNUP
   PASSWORD_RESET
-}
-
-model OTP {
-  id        String   @id @default(cuid())
-  code      String
-  type      OTPType
-  expiresAt DateTime
-  createdAt DateTime @default(now())
-
-  // Relation to User
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  //for faster searching @@index use kra
-  @@index([userId, type])
 }

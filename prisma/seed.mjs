@@ -12,7 +12,7 @@ const prisma = new PrismaClient({ adapter });
 
 const firstNames = ["Aarav","Aditya","Akash","Aman","Ankit","Arjun","Ayush","Dev","Dhruv","Harsh","Karan","Krishna","Manish","Mohit","Nikhil","Nishant","Piyush","Rahul","Rohit","Sahil","Shubham","Siddharth","Tanish","Varun","Vikas","Vivek","Yash","Abhishek","Anurag","Deepak"];
 const lastNames = ["Kumar","Singh","Sharma","Verma","Gupta","Jha","Prasad","Sinha","Pandey","Mishra","Roy","Das","Patel","Yadav","Thakur","Choudhary","Ranjan","Mehta","Sahu","Tiwari"];
-const hostels = ["Jadunath","Patel","Kadam","Dhiraj","Ramanujam","Tilka Manjhi"];
+const hostels = ["Girls Hostel A", "Girls Hostel B", "Girls Hostel C", "Girls Hostel D", "Girls Hostel RLB", "Boys Hostel E", "Boys Hostel F", "Boys Hostel G", "Boys Hostel H", "Boys Hostel I", "Boys Hostel J", "Boys Hostel K", "Boys Hostel L"];
 const statuses = ["PENDING","IN_PROGRESS","RESOLVED","REJECTED"];
 const templates = [
   ["Water leakage in bathroom","There is continuous water leakage in the bathroom and the floor remains wet.","PLUMBING","https://images.unsplash.com/photo-1585704032915-c3400ca199e7?auto=format&fit=crop&w=1000&q=80"],

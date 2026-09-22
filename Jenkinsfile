@@ -38,3 +38,21 @@ pipeline {
         }
     }
 }
+stage('Docker Push') {
+    steps {
+        withCredentials([
+            usernamePassword(
+                credentialsId: 'dockerhub',
+                usernameVariable: 'DOCKER_USER',
+                passwordVariable: 'DOCKER_TOKEN'
+            )
+        ]) {
+            sh '''
+                echo "$DOCKER_TOKEN" | docker login -u "$DOCKER_USER" --password-stdin
+                docker tag hostel-complaints:latest $DOCKER_USER/hostel-complaints:latest
+                docker push $DOCKER_USER/hostel-complaints:latest
+                docker logout
+            '''
+        }
+    }
+}

@@ -1,19 +1,17 @@
-
 pipeline {
     agent any
-    
+
     tools {
         nodejs 'Node22'
     }
 
-    stage('Check Node') {
+    stages {
+        stage('Check Node') {
             steps {
                 sh 'node --version'
                 sh 'npm --version'
             }
         }
-
-    stages {
 
         stage('Install Dependencies') {
             steps {
@@ -40,4 +38,3 @@ pipeline {
         }
     }
 }
-

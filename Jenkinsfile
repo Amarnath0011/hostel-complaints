@@ -6,12 +6,6 @@ pipeline {
     }
 
     stages {
-        stage('Check Node') {
-            steps {
-                sh 'node --version'
-                sh 'npm --version'
-            }
-        }
 
         stage('Install Dependencies') {
             steps {
@@ -34,6 +28,12 @@ pipeline {
         stage('Build') {
             steps {
                 sh 'npm run build'
+            }
+        }
+
+        stage('Docker Build') {
+            steps {
+                sh 'docker build -t hostel-complaints:latest .'
             }
         }
     }

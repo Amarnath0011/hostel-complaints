@@ -3,7 +3,7 @@ pipeline {
     agent any
     
     tools {
-        nodejs 'node22'
+        nodejs 'Node22'
     }
 
     stage('Check Node') {

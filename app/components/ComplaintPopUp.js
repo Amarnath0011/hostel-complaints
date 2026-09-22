@@ -12,8 +12,7 @@ function ComplaintPopUp({complaint, onClose, onStatusUpdate}) {
   const [commentSubmitting, setCommentSubmitting] = useState(false);
   const {user, accessToken, refresh} = useAuth();
   const isSupervisor = user?.role === "SUPERVISOR";
-  if (!complaint) return null;
-
+  
   const statusStyles = {
     PENDING: "bg-amber-100 text-amber-700 border-amber-200 border-2 rounded-md px-2 py-1",
     RESOLVED: "bg-green-100 text-green-700 border-green-200 border-2 rounded-md px-2 py-1",
@@ -49,7 +48,10 @@ function ComplaintPopUp({complaint, onClose, onStatusUpdate}) {
     }
     fetchComments();
     return () => { cancelled = true; };
-  }, [complaint.id, accessToken, refresh]);
+  }, [complaint?.id, accessToken, refresh]);
+
+  if (!complaint) return null;
+
 
   async function handleStatusChange(newStatus) {
     if(newStatus === complaint.status) return;
